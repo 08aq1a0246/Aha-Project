@@ -1,0 +1,33 @@
+trigger BeforeTrigger on Case (before insert, before update) {
+    try{
+        for(Case caseRec: Trigger.New){
+            if(caseRec.ContactId ==null &&caseRec.AccountId == null){
+                system.debug('hello');
+                List<Contact> contacts;
+                String tempContactId = caseRec.ContactId;
+                if(caseRec.SuppliedEmail != null){
+                    
+                    contacts = [select ID, Name,AccountId,Email,MobilePhone from Contact where email =:caseRec.SuppliedEmail];   
+                    system.debug('contacts==' + contacts);
+                }
+                else if(caseRec.SuppliedPhone !=null){
+                    contacts = [select ID, Name,AccountId,Email,MobilePhone,Phone from Contact where MobilePhone = :caseRec.SuppliedPhone OR Phone =:caseRec.SuppliedPhone];      
+                    system.debug('contacts2==' + contacts);
+                }
+                
+                if(!contacts.isEmpty()){
+                    caseRec.AccountId = contacts.get(0).AccountId;
+                    caseRec.ContactId = contacts.get(0).Id;
+                    caseRec.Temp_Contact_Id__c = tempContactId;
+                    
+                    //upsert caseRec; 
+                    /*List<Contact> contactsTemp = [select ID, Name,AccountId from Contact where Id=:tempContactId];
+delete contactsTemp;*/
+                }
+            }
+        }
+    }
+    catch(exception e){
+        System.debug(e);
+    }
+}
