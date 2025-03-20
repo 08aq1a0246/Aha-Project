@@ -1,0 +1,20 @@
+trigger AccountAfterInsertTrigger on Account (after insert) {
+    
+    for(Account account:Trigger.New){
+        
+        if(account.Account_Type__c==null&&account.Phone!=null){
+            
+            Contact contact = new Contact();
+            contact.LastName = account.Name;
+            contact.MobilePhone = account.Phone;
+            if(account.Phone.length()>10){
+                contact.MobilePhone = account.Phone.subString(account.Phone.length()-10);
+            }
+            contact.AccountId = account.Id;
+            
+            upsert contact;
+            AccountUpdateFutureClass.updateAccountPhone(account.Id);
+        }
+    }
+
+}
